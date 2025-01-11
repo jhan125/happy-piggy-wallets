@@ -2,13 +2,26 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Plus, X, Check } from "lucide-react";
+import { ArrowLeft, Plus, X, Check, Trash2 } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ExpenseCategories } from "@/components/ExpenseCategories";
 import { WalletStats } from "@/components/WalletStats";
 import { BudgetManager } from "@/components/BudgetManager";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { toast } from "@/components/ui/use-toast";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface Transaction {
   id: string;
@@ -110,6 +123,17 @@ export default function WalletDetails() {
     setWallet(updatedWallet);
   };
 
+  const handleDeleteWallet = () => {
+    const wallets = JSON.parse(localStorage.getItem("wallets") || "[]");
+    const updatedWallets = wallets.filter((w: WalletData) => w.id !== wallet?.id);
+    localStorage.setItem("wallets", JSON.stringify(updatedWallets));
+    navigate("/");
+    toast({
+      title: "Success",
+      description: "Wallet deleted successfully",
+    });
+  };
+
   if (!wallet) {
     return <div>Wallet not found</div>;
   }
@@ -128,10 +152,37 @@ export default function WalletDetails() {
       <Card className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">{wallet.name}</h1>
-          <Button onClick={() => setShowAddTransaction(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Transaction
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setShowAddTransaction(true)} className="text-black">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Transaction
+            </Button>
+            
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="icon">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Wallet</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete this wallet? This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDeleteWallet}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
         
         <BudgetManager
@@ -141,6 +192,14 @@ export default function WalletDetails() {
             .reduce((sum, t) => sum + t.amount, 0)}
           onUpdateBudget={handleUpdateBudget}
         />
+
+        {wallet.budgetProgress > 100 && (
+          <Alert variant="destructive" className="mt-4">
+            <AlertDescription>
+              You have exceeded your budget by {wallet.budgetProgress - 100}%. Please control your spending.
+            </AlertDescription>
+          </Alert>
+        )}
 
         {showAddTransaction ? (
           <Card className="p-6 mb-8">

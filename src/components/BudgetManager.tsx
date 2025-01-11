@@ -100,8 +100,8 @@ export function BudgetManager({ budget, spent, onUpdateBudget }: BudgetManagerPr
           </div>
 
           <div className="flex space-x-4">
-            <Button onClick={handleSave} className="flex-1">
-              <Check className="h-4 w-4 mr-2" />
+            <Button onClick={handleSave} className="flex-1 text-white bg-black">
+              <Check className="h-4 w-4 mr-2 text-white" />
               Save Budget
             </Button>
             <Button variant="outline" onClick={() => setIsEditing(false)} className="flex-1">
